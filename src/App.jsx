@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from './components/AppShell.jsx';
 import { GovernancePage } from './components/GovernancePage.jsx';
-import { LoginScreen } from './components/LoginScreen.jsx';
 import { OverviewPage } from './components/OverviewPage.jsx';
 import { RunsPage } from './components/RunsPage.jsx';
 import { SessionsPage } from './components/SessionsPage.jsx';
-import { SetupScreen } from './components/SetupScreen.jsx';
 import { ToolsPage } from './components/ToolsPage.jsx';
 import { UsagePage } from './components/UsagePage.jsx';
 import { createEmptyViews } from './config/constants.js';
 import { useWebSocket } from './hooks/useWebSocket.js';
-import { clearAuthToken, getAuthToken, getWebSocketUrl, requestJson, setAuthToken } from './utils/api.js';
+import { getWebSocketUrl, requestJson } from './utils/api.js';
 import { buildSearchResults } from './utils/selectors.js';
 
 const ACTIVE_RUN_STATUSES = new Set(['running', 'awaiting_approval']);
@@ -210,83 +208,77 @@ function buildFilteredViews(rawViews, workspaceId, range) {
   };
 }
 
-function LoadingScreen({ title, body }) {
+function LoadingScreen({ title, body, action = null }) {
   return (
     <div className="loading-screen">
       <div className="loading-card">
-        <p className="eyebrow">Booting control plane</p>
+        <p className="eyebrow">Codex dashboard</p>
         <h1>{title}</h1>
         <p>{body}</p>
+        {action ? <div className="empty-state-action">{action}</div> : null}
       </div>
     </div>
   );
 }
 
+function getDashboardMeta(bootstrap, socketMeta) {
+  if (socketMeta?.generatedAt) {
+    return socketMeta;
+  }
+
+  if (!bootstrap) {
+    return socketMeta;
+  }
+
+  return {
+    revision: bootstrap.revision ?? 0,
+    generatedAt: bootstrap.generatedAt ?? null,
+    mode: bootstrap.mode ?? 'mock'
+  };
+}
+
 export default function App() {
-  const [authState, setAuthState] = useState({ loading: true, setupRequired: false, configured: false });
-  const [authError, setAuthError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [bootstrap, setBootstrap] = useState(null);
+  const [bootstrapError, setBootstrapError] = useState('');
   const [activeView, setActiveView] = useState('overview');
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('all');
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
   const [selectedRunId, setSelectedRunId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const token = getAuthToken();
-
-  async function refreshAuthState() {
-    const state = await requestJson('/api/auth/required');
-    setAuthState({ loading: false, ...state });
-    return state;
-  }
-
-  async function loadBootstrap() {
-    try {
-      const data = await requestJson('/api/bootstrap');
-      setBootstrap(data);
-      setAuthError('');
-    } catch (error) {
-      if (error.statusCode === 401) {
-        clearAuthToken();
-        setBootstrap(null);
-      }
-      setAuthError(error.message);
-      throw error;
-    }
-  }
+  const wsUrl = useMemo(() => getWebSocketUrl(), []);
 
   useEffect(() => {
+    let cancelled = false;
+
     void (async () => {
       try {
-        const state = await refreshAuthState();
-        if (state.configured && getAuthToken()) {
-          await loadBootstrap();
+        const data = await requestJson('/api/bootstrap');
+        if (cancelled) {
+          return;
         }
+        setBootstrap(data);
+        setBootstrapError('');
       } catch (error) {
-        setAuthError(error.message);
+        if (cancelled) {
+          return;
+        }
+        setBootstrapError(error.message);
       }
     })();
-  }, []);
 
-  useEffect(() => {
-    const handleUnauthorized = () => {
-      clearAuthToken();
-      setBootstrap(null);
-      setAuthError('Your dashboard session expired. Please log in again.');
+    return () => {
+      cancelled = true;
     };
-
-    window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
-  const wsUrl = useMemo(() => (token ? getWebSocketUrl(token) : ''), [token]);
   const socketState = useWebSocket(wsUrl, {
-    enabled: Boolean(token && !authState.setupRequired),
+    enabled: Boolean(bootstrap),
     initialPayload: bootstrap
   });
 
-  const rawViews = socketState.views || createEmptyViews();
+  const dashboardMeta = getDashboardMeta(bootstrap, socketState.meta);
+  const rawViews = dashboardMeta.generatedAt ? socketState.views : bootstrap?.views || socketState.views || createEmptyViews();
   const filteredViews = useMemo(
     () => buildFilteredViews(rawViews, selectedWorkspaceId, selectedTimeRange),
     [rawViews, selectedWorkspaceId, selectedTimeRange]
@@ -308,72 +300,33 @@ export default function App() {
     }
   }, [filteredViews.runs.items, selectedRunId]);
 
-  async function handleSetup(password, confirmPassword) {
-    setIsSubmitting(true);
-    setAuthError('');
-    try {
-      const session = await requestJson('/api/auth/setup', {
-        method: 'POST',
-        body: { password, confirmPassword }
-      });
-      setAuthToken(session.token);
-      await refreshAuthState();
-      await loadBootstrap();
-    } catch (error) {
-      setAuthError(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleLogin(password) {
-    setIsSubmitting(true);
-    setAuthError('');
-    try {
-      const session = await requestJson('/api/auth/login', {
-        method: 'POST',
-        body: { password }
-      });
-      setAuthToken(session.token);
-      await loadBootstrap();
-    } catch (error) {
-      setAuthError(error.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      await requestJson('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore logout failures locally.
-    }
-    clearAuthToken();
-    setBootstrap(null);
-    setAuthError('');
-  }
-
   function handleSearchResultSelect(result) {
     setActiveView(result.page);
     setSelectedRunId(result.runId || result.id);
     setSearchQuery('');
   }
 
-  if (authState.loading) {
-    return <LoadingScreen title="Checking local dashboard access." body="Inspecting the local auth gate before the UI mounts." />;
+  if (!dashboardMeta.generatedAt && bootstrapError) {
+    return (
+      <LoadingScreen
+        title="Unable to load the local dashboard."
+        body={bootstrapError}
+        action={(
+          <button type="button" className="primary-button" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        )}
+      />
+    );
   }
 
-  if (authState.setupRequired) {
-    return <SetupScreen onSubmit={handleSetup} error={authError} isSubmitting={isSubmitting} />;
-  }
-
-  if (!token) {
-    return <LoginScreen onSubmit={handleLogin} error={authError} isSubmitting={isSubmitting} />;
-  }
-
-  if (!bootstrap && socketState.connectionStatus === 'connecting') {
-    return <LoadingScreen title="Hydrating the first operational snapshot." body="Connecting to the local dashboard backend and loading the current workspace state." />;
+  if (!dashboardMeta.generatedAt) {
+    return (
+      <LoadingScreen
+        title="Loading the local dashboard."
+        body="Connecting to the dashboard backend and hydrating the current workspace snapshot."
+      />
+    );
   }
 
   const pageProps = {
@@ -402,10 +355,8 @@ export default function App() {
         searchResults,
         onSearchResultSelect: handleSearchResultSelect,
         connectionStatus: socketState.connectionStatus,
-        mode: socketState.meta.mode,
-        generatedAt: socketState.meta.generatedAt,
-        authLabel: 'Authenticated',
-        onLogout: handleLogout
+        mode: dashboardMeta.mode,
+        generatedAt: dashboardMeta.generatedAt
       }}
     >
       {pageProps[activeView]}

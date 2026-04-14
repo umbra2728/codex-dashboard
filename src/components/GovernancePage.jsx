@@ -1,4 +1,5 @@
 import { DataTable } from './DataTable.jsx';
+import { EmptyState } from './EmptyState.jsx';
 import { formatDateTime, formatRelativeTime, titleCase } from '../utils/formatting.js';
 
 function TonePill({ value }) {
@@ -11,9 +12,9 @@ export function GovernancePage({ governance }) {
       key: 'action',
       header: 'Approval request',
       render: (approval) => (
-        <div>
-          <strong>{approval.action}</strong>
-          <p>{approval.workspaceName} · {approval.runSummary}</p>
+        <div className="content-stack">
+          <strong className="truncate-2">{approval.action}</strong>
+          <p className="truncate">{approval.workspaceName} · {approval.runSummary}</p>
         </div>
       )
     },
@@ -75,20 +76,24 @@ export function GovernancePage({ governance }) {
             </div>
             <span className="panel-kicker">Newest first</span>
           </div>
-          <div className="stack-list">
-            {governance.policyFeed.map((event) => (
-              <div key={event.id} className="list-row-card">
-                <div>
-                  <strong>{event.message}</strong>
-                  <p>{event.policy} · {event.workspaceName}</p>
+          {governance.policyFeed.length ? (
+            <div className="stack-list">
+              {governance.policyFeed.map((event) => (
+                <div key={event.id} className="list-row-card">
+                  <div className="content-stack">
+                    <strong className="truncate-2">{event.message}</strong>
+                    <p className="truncate">{event.policy} · {event.workspaceName}</p>
+                  </div>
+                  <div className="list-row-meta">
+                    <TonePill value={event.severity} />
+                    <span>{formatRelativeTime(event.timestamp)}</span>
+                  </div>
                 </div>
-                <div className="list-row-meta">
-                  <TonePill value={event.severity} />
-                  <span>{formatRelativeTime(event.timestamp)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState eyebrow="Policy" title="No policy findings in this slice." body="Compliance events will populate here as the source updates." />
+          )}
         </article>
 
         <article className="panel panel-wide">
@@ -99,20 +104,24 @@ export function GovernancePage({ governance }) {
             </div>
             <span className="panel-kicker">Guardrails visible</span>
           </div>
-          <div className="stack-list">
-            {governance.managedConfig.map((item) => (
-              <div key={item.id} className="list-row-card">
-                <div>
-                  <strong>{item.label}</strong>
-                  <p>{item.detail}</p>
+          {governance.managedConfig.length ? (
+            <div className="stack-list">
+              {governance.managedConfig.map((item) => (
+                <div key={item.id} className="list-row-card">
+                  <div className="content-stack">
+                    <strong className="truncate">{item.label}</strong>
+                    <p className="truncate-2">{item.detail}</p>
+                  </div>
+                  <div className="list-row-meta">
+                    <TonePill value={item.status} />
+                    <span>{formatDateTime(item.updatedAt)}</span>
+                  </div>
                 </div>
-                <div className="list-row-meta">
-                  <TonePill value={item.status} />
-                  <span>{formatDateTime(item.updatedAt)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState eyebrow="Config" title="No managed config signals in range." body="Adapter and policy status will land here when available." />
+          )}
         </article>
       </section>
     </div>

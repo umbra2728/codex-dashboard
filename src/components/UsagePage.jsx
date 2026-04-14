@@ -1,4 +1,5 @@
 import { DataTable } from './DataTable.jsx';
+import { EmptyState } from './EmptyState.jsx';
 import { formatCompactNumber, formatCurrency, formatDateTime } from '../utils/formatting.js';
 
 function UsageBars({ items, metricKey, formatter }) {
@@ -9,7 +10,7 @@ function UsageBars({ items, metricKey, formatter }) {
       {items.map((item) => (
         <div key={item.id || item.label} className="usage-bar-row">
           <div className="usage-bar-copy">
-            <strong>{item.label}</strong>
+            <strong className="truncate">{item.label}</strong>
             <span>{formatter(item[metricKey])}</span>
           </div>
           <div className="usage-bar-track">
@@ -27,13 +28,17 @@ export function UsagePage({ usage }) {
       key: 'workspaceName',
       header: 'Workspace',
       render: (sample) => (
-        <div>
-          <strong>{sample.workspaceName}</strong>
-          <p>{sample.runSummary}</p>
+        <div className="content-stack">
+          <strong className="truncate">{sample.workspaceName}</strong>
+          <p className="truncate">{sample.runSummary}</p>
         </div>
       )
     },
-    { key: 'model', header: 'Model' },
+    {
+      key: 'model',
+      header: 'Model',
+      cellClassName: 'cell-truncate'
+    },
     {
       key: 'totalTokens',
       header: 'Tokens',
@@ -81,7 +86,11 @@ export function UsagePage({ usage }) {
             </div>
             <span className="panel-kicker">Model mix</span>
           </div>
-          <UsageBars items={usage.byModel} metricKey="totalTokens" formatter={formatCompactNumber} />
+          {usage.byModel.length ? (
+            <UsageBars items={usage.byModel} metricKey="totalTokens" formatter={formatCompactNumber} />
+          ) : (
+            <EmptyState eyebrow="Models" title="No model usage in this slice." body="Usage bars will appear here as soon as token samples are available." />
+          )}
         </article>
 
         <article className="panel">
@@ -92,7 +101,11 @@ export function UsagePage({ usage }) {
             </div>
             <span className="panel-kicker">Workspace mix</span>
           </div>
-          <UsageBars items={usage.byWorkspace} metricKey="costUsd" formatter={formatCurrency} />
+          {usage.byWorkspace.length ? (
+            <UsageBars items={usage.byWorkspace} metricKey="costUsd" formatter={formatCurrency} />
+          ) : (
+            <EmptyState eyebrow="Workspaces" title="No workspace cost data in this slice." body="Spend bars will appear here after the first usage samples arrive." />
+          )}
         </article>
 
         <article className="panel panel-wide panel-table">

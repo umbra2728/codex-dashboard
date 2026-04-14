@@ -13,9 +13,9 @@ export function AppShell({
     <div className="app-shell">
       <aside className="nav-rail">
         <div className="brand-block">
-          <p className="brand-mark">CDX / OPS</p>
+          <p className="brand-mark">CDX</p>
           <h2>Codex Dashboard</h2>
-          <p className="brand-copy">A local-first lens for runs, tools, governance, and usage.</p>
+          <p className="brand-copy">Local visibility for runs, tools, governance, and spend.</p>
         </div>
 
         <nav className="rail-nav" aria-label="Primary navigation">

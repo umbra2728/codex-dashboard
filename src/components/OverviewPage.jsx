@@ -1,6 +1,6 @@
 import { StatsStrip } from './StatsStrip.jsx';
 import { EmptyState } from './EmptyState.jsx';
-import { formatCompactNumber, formatCurrency, formatDateTime, formatPercent, formatRelativeTime, titleCase } from '../utils/formatting.js';
+import { formatCompactNumber, formatCurrency, formatPercent, formatRelativeTime, titleCase } from '../utils/formatting.js';
 
 function TonePill({ value }) {
   const normalized = String(value || '').toLowerCase();
@@ -23,9 +23,9 @@ function ActivityItem({ item }) {
 
   return (
     <li className="activity-item">
-      <div>
-        <p className="activity-title">{title}</p>
-        <p className="activity-meta">{meta}</p>
+      <div className="content-stack">
+        <p className="activity-title truncate-2">{title}</p>
+        <p className="activity-meta truncate">{meta}</p>
       </div>
       <div className="activity-side">
         <TonePill value={item.status || item.severity || item.kind} />
@@ -38,9 +38,9 @@ function ActivityItem({ item }) {
 function SourceHealthItem({ item }) {
   return (
     <li className="source-item">
-      <div>
-        <p>{item.label}</p>
-        <span>{item.detail}</span>
+      <div className="content-stack">
+        <p className="truncate">{item.label}</p>
+        <span className="truncate-2">{item.detail}</span>
       </div>
       <div className="source-item-side">
         <TonePill value={item.status} />
@@ -57,18 +57,18 @@ export function OverviewPage({ overview, onSelectRun }) {
   return (
     <div className="page-stack">
       <section className="hero-panel">
-        <div>
-          <p className="eyebrow">Situation brief</p>
-          <h2>Track live execution, governance pressure, and cost in one local surface.</h2>
+        <div className="content-stack">
+          <p className="eyebrow">Overview</p>
+          <h2>Track live execution, governance pressure, and cost from one local workspace.</h2>
           <p className="hero-copy">
-            The v1 shell stays read-only and local-first, streaming a normalized snapshot+deltas contract from mock or watched file sources.
+            The dashboard stays read-only, localhost-only, and streams a shared snapshot plus deltas from mock or file-backed sources.
           </p>
         </div>
         <div className="hero-metrics-grid">
           <div className="hero-metric-card">
             <span>Total tokens</span>
             <strong>{formatCompactNumber(metrics.totalTokens)}</strong>
-            <small>Across current dashboard slice</small>
+            <small>Across the selected slice</small>
           </div>
           <div className="hero-metric-card">
             <span>Estimated cost</span>
@@ -78,7 +78,7 @@ export function OverviewPage({ overview, onSelectRun }) {
           <div className="hero-metric-card">
             <span>Tool error rate</span>
             <strong>{formatPercent(metrics.toolErrorRate)}</strong>
-            <small>From current tool ledger</small>
+            <small>Across current tool volume</small>
           </div>
         </div>
       </section>
@@ -98,9 +98,9 @@ export function OverviewPage({ overview, onSelectRun }) {
             <div className="stack-list">
               {activeRuns.map((run) => (
                 <button type="button" key={run.id} className="list-row-button" onClick={() => onSelectRun(run.id)}>
-                  <div>
-                    <strong>{run.summary}</strong>
-                    <p>{run.workspaceName} · {run.actor} · {run.model}</p>
+                  <div className="content-stack">
+                    <strong className="truncate-2">{run.summary}</strong>
+                    <p className="truncate">{run.workspaceName} · {run.actor} · {run.model}</p>
                   </div>
                   <div className="list-row-meta">
                     <TonePill value={run.status} />
@@ -146,13 +146,13 @@ export function OverviewPage({ overview, onSelectRun }) {
             <div className="stack-list">
               {overview.approvals.map((approval) => (
                 <div key={approval.id} className="list-row-card">
-                  <div>
-                    <strong>{approval.action}</strong>
-                    <p>{approval.workspaceName} · {approval.runSummary}</p>
+                  <div className="content-stack">
+                    <strong className="truncate-2">{approval.action}</strong>
+                    <p className="truncate">{approval.workspaceName} · {approval.runSummary}</p>
                   </div>
                   <div className="list-row-meta">
                     <TonePill value={approval.risk} />
-                    <span>{formatDateTime(approval.requestedAt)}</span>
+                    <span>{formatRelativeTime(approval.requestedAt)}</span>
                   </div>
                 </div>
               ))}
@@ -174,9 +174,9 @@ export function OverviewPage({ overview, onSelectRun }) {
             <div className="stack-list">
               {overview.policyFindings.map((policy) => (
                 <div key={policy.id} className="list-row-card">
-                  <div>
-                    <strong>{policy.message}</strong>
-                    <p>{policy.policy} · {policy.workspaceName}</p>
+                  <div className="content-stack">
+                    <strong className="truncate-2">{policy.message}</strong>
+                    <p className="truncate">{policy.policy} · {policy.workspaceName}</p>
                   </div>
                   <div className="list-row-meta">
                     <TonePill value={policy.severity} />

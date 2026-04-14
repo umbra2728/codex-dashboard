@@ -1,4 +1,5 @@
 import { DataTable } from './DataTable.jsx';
+import { EmptyState } from './EmptyState.jsx';
 import { formatDurationMs, formatRelativeTime, titleCase } from '../utils/formatting.js';
 
 function TonePill({ value }) {
@@ -6,19 +7,31 @@ function TonePill({ value }) {
 }
 
 export function ToolsPage({ tools }) {
+  const reviewItems = Array.from(
+    new Map([...tools.failures, ...tools.riskyActions].map((item) => [item.id, item])).values()
+  ).slice(0, 10);
+
   const columns = [
     {
       key: 'tool',
       header: 'Tool',
       render: (toolCall) => (
-        <div>
-          <strong>{toolCall.tool}</strong>
-          <p>{toolCall.summary}</p>
+        <div className="content-stack">
+          <strong className="truncate">{toolCall.tool}</strong>
+          <p className="truncate-2">{toolCall.summary}</p>
         </div>
       )
     },
-    { key: 'workspaceName', header: 'Workspace' },
-    { key: 'runSummary', header: 'Run' },
+    {
+      key: 'workspaceName',
+      header: 'Workspace',
+      cellClassName: 'cell-truncate'
+    },
+    {
+      key: 'runSummary',
+      header: 'Run',
+      cellClassName: 'cell-truncate'
+    },
     {
       key: 'status',
       header: 'Status',
@@ -77,19 +90,23 @@ export function ToolsPage({ tools }) {
             </div>
             <span className="panel-kicker">Top tools</span>
           </div>
-          <div className="stack-list">
-            {tools.summary.byTool.map((entry) => (
-              <div key={entry.tool} className="list-row-card">
-                <div>
-                  <strong>{entry.tool}</strong>
-                  <p>{entry.count} calls · {entry.errors} errors · {entry.blocked} blocked</p>
+          {tools.summary.byTool.length ? (
+            <div className="stack-list">
+              {tools.summary.byTool.map((entry) => (
+                <div key={entry.tool} className="list-row-card">
+                  <div className="content-stack">
+                    <strong className="truncate">{entry.tool}</strong>
+                    <p className="truncate">{entry.count} calls · {entry.errors} errors · {entry.blocked} blocked</p>
+                  </div>
+                  <div className="list-row-meta">
+                    <span>{formatDurationMs(entry.averageLatencyMs)}</span>
+                  </div>
                 </div>
-                <div className="list-row-meta">
-                  <span>{formatDurationMs(entry.averageLatencyMs)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState eyebrow="Tools" title="No tool volume in this slice." body="Tool usage appears here as soon as the source emits ledger entries." />
+          )}
         </article>
 
         <article className="panel">
@@ -100,20 +117,24 @@ export function ToolsPage({ tools }) {
             </div>
             <span className="panel-kicker">Needs review</span>
           </div>
-          <div className="stack-list">
-            {[...tools.failures, ...tools.riskyActions].slice(0, 10).map((item) => (
-              <div key={item.id} className="list-row-card">
-                <div>
-                  <strong>{item.summary}</strong>
-                  <p>{item.tool} · {item.workspaceName}</p>
+          {reviewItems.length ? (
+            <div className="stack-list">
+              {reviewItems.map((item) => (
+                <div key={item.id} className="list-row-card">
+                  <div className="content-stack">
+                    <strong className="truncate-2">{item.summary}</strong>
+                    <p className="truncate">{item.tool} · {item.workspaceName}</p>
+                  </div>
+                  <div className="list-row-meta">
+                    <TonePill value={item.status} />
+                    <span>{formatRelativeTime(item.timestamp)}</span>
+                  </div>
                 </div>
-                <div className="list-row-meta">
-                  <TonePill value={item.status} />
-                  <span>{formatRelativeTime(item.timestamp)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState eyebrow="Exceptions" title="No failures or risky actions in range." body="Problems and blocked actions will surface here automatically." />
+          )}
         </article>
       </section>
     </div>

@@ -1,24 +1,6 @@
-import { AUTH_TOKEN_KEY } from '../config/constants.js';
-
-export function getAuthToken() {
-  return sessionStorage.getItem(AUTH_TOKEN_KEY);
-}
-
-export function setAuthToken(token) {
-  sessionStorage.setItem(AUTH_TOKEN_KEY, token);
-}
-
-export function clearAuthToken() {
-  sessionStorage.removeItem(AUTH_TOKEN_KEY);
-}
-
-export function getWebSocketUrl(token) {
+export function getWebSocketUrl() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const url = new URL('/ws', `${protocol}//${window.location.host}`);
-  if (token) {
-    url.searchParams.set('token', token);
-  }
-  return url.toString();
+  return new URL('/ws', `${protocol}//${window.location.host}`).toString();
 }
 
 function normalizeBody(body) {
@@ -30,24 +12,14 @@ function normalizeBody(body) {
 }
 
 export async function apiFetch(url, options = {}) {
-  const token = getAuthToken();
-  const headers = {
-    ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {})
-  };
-
-  const response = await fetch(url, {
+  return fetch(url, {
     ...options,
-    headers,
+    headers: {
+      ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {})
+    },
     body: normalizeBody(options.body)
   });
-
-  if (response.status === 401) {
-    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
-  }
-
-  return response;
 }
 
 export async function requestJson(url, options = {}) {

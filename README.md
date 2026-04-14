@@ -4,7 +4,7 @@ Local-first operational dashboard for Codex/OpenAI workflows.
 
 ## Features
 
-- localhost-only password auth
+- localhost-only access model
 - realtime snapshot + delta WebSocket updates
 - normalized backend store with derived views
 - deterministic mock mode for development and tests
@@ -30,7 +30,10 @@ Important variables:
 
 - `CODEX_DASHBOARD_MODE=mock|file`
 - `CODEX_DASHBOARD_DATA_DIR=./data`
-- `CODEX_DASHBOARD_AUTH_FILE=./.local/dashboard.key`
+
+## Local access model
+
+The dashboard is designed for local-only use. It binds to localhost by default, keeps CORS and WebSocket origins limited to explicit local origins from `config.js`, and exposes a read-only API plus read-only websocket updates.
 
 ## File mode contract
 
@@ -49,7 +52,7 @@ Each file should contain either a top-level array or newline-delimited JSON obje
 
 ## Architecture
 
-- `server/` — auth, normalized store, selectors, REST routes, WebSocket server, data sources
+- `server/` — normalized store, selectors, REST routes, WebSocket server, data sources
 - `src/` — frontend shell, pages, realtime client hook, formatting/selectors utilities
 - `test/` — unit/integration fixtures and backend/client tests
 - `e2e/` — Playwright smoke coverage

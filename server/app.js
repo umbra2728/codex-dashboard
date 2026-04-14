@@ -7,7 +7,6 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { config as defaultConfig } from '../config.js';
-import { createAuthService } from './auth.js';
 import { createApiRouter } from './routes/api.js';
 import { createMockSource } from './sources/mockSource.js';
 import { createFileSource } from './sources/fileSource.js';
@@ -78,20 +77,10 @@ export async function createDashboardServer(runtimeConfig = defaultConfig) {
   const app = express();
   const server = http.createServer(app);
   const store = createDashboardStore({ mode: runtimeConfig.mode });
-  const auth = createAuthService({
-    authFile: runtimeConfig.paths.authFile,
-    minimumPasswordLength: runtimeConfig.security.minimumPasswordLength,
-    sessionTtlMs: runtimeConfig.security.sessionTtlMs
-  });
   const source = runtimeConfig.mode === 'file'
     ? createFileSource({ dataDir: runtimeConfig.paths.dataDir, watch: runtimeConfig.watch })
     : createMockSource();
-  const ws = createDashboardWebSocketServer({ server, store, auth, config: runtimeConfig });
-  const authLimiter = rateLimit({
-    ...runtimeConfig.authRateLimit,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false
-  });
+  const ws = createDashboardWebSocketServer({ server, store, config: runtimeConfig });
 
   app.disable('x-powered-by');
   app.use(compression());
@@ -106,7 +95,7 @@ export async function createDashboardServer(runtimeConfig = defaultConfig) {
   app.use(express.json({ limit: runtimeConfig.security.jsonLimit }));
   app.use(createJsonContentGuard());
   app.use(createApiLogger());
-  app.use('/api', createApiRouter({ auth, authLimiter, store }));
+  app.use('/api', createApiRouter({ store }));
 
   const distIndexPath = path.resolve(runtimeConfig.paths.distDir, 'index.html');
   if (await fileExists(distIndexPath)) {
@@ -137,7 +126,6 @@ export async function createDashboardServer(runtimeConfig = defaultConfig) {
     app,
     server,
     store,
-    auth,
     config: runtimeConfig,
     async start() {
       await new Promise((resolve) => {
@@ -148,7 +136,6 @@ export async function createDashboardServer(runtimeConfig = defaultConfig) {
       console.info(`Mode: ${runtimeConfig.mode}`);
     },
     async close() {
-      auth.stop();
       await source.stop();
       await ws.close();
       await new Promise((resolve, reject) => {

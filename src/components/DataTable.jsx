@@ -22,7 +22,7 @@ export function DataTable({
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className={column.headerClassName}>{column.header}</th>
+              <th key={column.key} className={column.headerClassName} scope="col">{column.header}</th>
             ))}
           </tr>
         </thead>

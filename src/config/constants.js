@@ -1,15 +1,14 @@
-export const AUTH_TOKEN_KEY = 'codex-dashboard-token';
 export const WS_STALE_THRESHOLD_MS = 20_000;
 export const REST_POLL_INTERVAL_MS = 15_000;
 export const MAX_SEARCH_RESULTS = 8;
 
 export const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', kicker: 'Live brief' },
-  { id: 'runs', label: 'Runs', kicker: 'Execution inventory' },
-  { id: 'sessions', label: 'Sessions', kicker: 'Timelines' },
-  { id: 'tools', label: 'Tools', kicker: 'Ledger + latency' },
-  { id: 'governance', label: 'Governance', kicker: 'Approvals + policy' },
-  { id: 'usage', label: 'Usage', kicker: 'Tokens + cost' }
+  { id: 'runs', label: 'Runs', kicker: 'Execution log' },
+  { id: 'sessions', label: 'Sessions', kicker: 'Agent lanes' },
+  { id: 'tools', label: 'Tools', kicker: 'Tool ledger' },
+  { id: 'governance', label: 'Governance', kicker: 'Policy lane' },
+  { id: 'usage', label: 'Usage', kicker: 'Spend trail' }
 ];
 
 export const TIME_RANGE_OPTIONS = [

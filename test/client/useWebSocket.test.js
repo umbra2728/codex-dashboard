@@ -14,6 +14,11 @@ class MockWebSocket {
   static CLOSED = 3;
   static instances = [];
 
+  onopen = null;
+  onmessage = null;
+  onclose = null;
+  onerror = null;
+
   constructor(url) {
     this.url = url;
     this.readyState = MockWebSocket.CONNECTING;
@@ -84,7 +89,7 @@ describe('useWebSocket', () => {
   });
 
   it('hydrates from websocket initial and delta payloads', async () => {
-    const { result } = renderHook(() => useWebSocket('ws://localhost/ws?token=test', { enabled: true }));
+    const { result } = renderHook(() => useWebSocket('ws://localhost/ws', { enabled: true }));
 
     await act(async () => {
       await Promise.resolve();
@@ -130,7 +135,7 @@ describe('useWebSocket', () => {
       }
     });
 
-    const { result } = renderHook(() => useWebSocket('ws://localhost/ws?token=test', { enabled: true, initialPayload: bootstrapPayload }));
+    const { result } = renderHook(() => useWebSocket('ws://localhost/ws', { enabled: true, initialPayload: bootstrapPayload }));
 
     await act(async () => {
       await Promise.resolve();

@@ -15,9 +15,9 @@ export function RunsPage({ runs, selectedRunId, onSelectRun }) {
       key: 'summary',
       header: 'Run',
       render: (run) => (
-        <div>
-          <strong>{run.summary}</strong>
-          <p>{run.workspaceName} · {run.actor}</p>
+        <div className="content-stack">
+          <strong className="truncate-2">{run.summary}</strong>
+          <p className="truncate">{run.workspaceName} · {run.actor}</p>
         </div>
       )
     },
@@ -28,7 +28,8 @@ export function RunsPage({ runs, selectedRunId, onSelectRun }) {
     },
     {
       key: 'model',
-      header: 'Model'
+      header: 'Model',
+      cellClassName: 'cell-truncate'
     },
     {
       key: 'pendingApprovalCount',
@@ -72,7 +73,7 @@ export function RunsPage({ runs, selectedRunId, onSelectRun }) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Selected run</p>
-            <h3>{selectedRun ? selectedRun.summary : 'No run selected'}</h3>
+            <h3 className="truncate-2">{selectedRun ? selectedRun.summary : 'No run selected'}</h3>
           </div>
           {selectedRun ? <TonePill value={selectedRun.status} /> : null}
         </div>
@@ -82,19 +83,19 @@ export function RunsPage({ runs, selectedRunId, onSelectRun }) {
             <div className="detail-grid">
               <div>
                 <span className="detail-label">Workspace</span>
-                <strong>{selectedRun.workspaceName}</strong>
+                <strong className="wrap-anywhere">{selectedRun.workspaceName}</strong>
               </div>
               <div>
                 <span className="detail-label">Actor</span>
-                <strong>{selectedRun.actor}</strong>
+                <strong className="wrap-anywhere">{selectedRun.actor}</strong>
               </div>
               <div>
                 <span className="detail-label">Model</span>
-                <strong>{selectedRun.model}</strong>
+                <strong className="wrap-anywhere">{selectedRun.model}</strong>
               </div>
               <div>
                 <span className="detail-label">Branch</span>
-                <strong>{selectedRun.branch}</strong>
+                <strong className="wrap-anywhere">{selectedRun.branch}</strong>
               </div>
               <div>
                 <span className="detail-label">Started</span>
@@ -142,8 +143,8 @@ export function RunsPage({ runs, selectedRunId, onSelectRun }) {
                 <ul className="chip-list">
                   {selectedRun.sessions.map((session) => (
                     <li key={session.id} className="chip-card">
-                      <strong>{session.label}</strong>
-                      <span>{session.model} · {titleCase(session.status)}</span>
+                      <strong className="truncate">{session.label}</strong>
+                      <span className="truncate">{session.model} · {titleCase(session.status)}</span>
                     </li>
                   ))}
                 </ul>

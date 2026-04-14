@@ -1,7 +1,8 @@
 import { formatRelativeTime, statusTone, titleCase } from '../utils/formatting.js';
 
-export function ConnectionStatus({ connectionStatus, mode, generatedAt, authLabel }) {
+export function ConnectionStatus({ connectionStatus, mode, generatedAt }) {
   const tone = statusTone(connectionStatus);
+  const snapshotLabel = generatedAt ? formatRelativeTime(generatedAt) : 'Awaiting snapshot';
 
   return (
     <div className={`status-cluster tone-${tone}`}>
@@ -11,8 +12,7 @@ export function ConnectionStatus({ connectionStatus, mode, generatedAt, authLabe
       </div>
       <div className="status-cluster-meta">
         <span>{titleCase(mode)} source</span>
-        <span>{formatRelativeTime(generatedAt)}</span>
-        <span>{authLabel}</span>
+        <span>{snapshotLabel}</span>
       </div>
     </div>
   );

@@ -5,10 +5,6 @@ function rejectSocket(socket, statusCode, message) {
   socket.destroy();
 }
 
-function getRequestToken(requestUrl, request) {
-  return requestUrl.searchParams.get('token') || request.headers.authorization?.replace(/^Bearer\s+/i, '') || null;
-}
-
 function serializeInitialData(store) {
   return JSON.stringify({
     type: 'initial_data',
@@ -23,7 +19,7 @@ function serializeDelta(update) {
   });
 }
 
-export function createDashboardWebSocketServer({ server, store, auth, config }) {
+export function createDashboardWebSocketServer({ server, store, config }) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: config.ws.maxPayload });
   const clients = new Set();
 
@@ -36,12 +32,6 @@ export function createDashboardWebSocketServer({ server, store, auth, config }) 
     const origin = request.headers.origin;
     if (origin && !config.corsOrigins.includes(origin)) {
       rejectSocket(socket, 403, 'Forbidden');
-      return;
-    }
-
-    const token = getRequestToken(requestUrl, request);
-    if (!auth.verifyToken(token)) {
-      rejectSocket(socket, 401, 'Unauthorized');
       return;
     }
 

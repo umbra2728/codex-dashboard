@@ -162,7 +162,7 @@ export const mockDashboardData = {
       status: 'ok',
       latencyMs: 42,
       timestamp: '2026-04-14T10:43:30.000Z',
-      summary: 'Read server/auth.js',
+      summary: 'Read server/ws.js',
       risky: false,
       blocked: false
     },
@@ -515,11 +515,11 @@ export const mockDashboardData = {
     {
       id: 'source-02',
       workspaceId: 'global',
-      source: 'auth',
-      label: 'Auth guard',
+      source: 'local-access',
+      label: 'Local origin guard',
       category: 'security',
       status: 'healthy',
-      detail: 'Password gate enforced for all dashboard routes',
+      detail: 'REST and websocket access limited to configured local origins',
       lagMs: 0,
       updatedAt: '2026-04-14T10:45:00.000Z'
     },

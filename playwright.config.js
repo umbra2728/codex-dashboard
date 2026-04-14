@@ -18,8 +18,7 @@ export default defineConfig({
       NODE_ENV: 'test',
       CODEX_DASHBOARD_MODE: 'mock',
       CODEX_DASHBOARD_HOST: '127.0.0.1',
-      CODEX_DASHBOARD_PORT: '3001',
-      CODEX_DASHBOARD_AUTH_FILE: './.playwright/dashboard.key'
+      CODEX_DASHBOARD_PORT: '3001'
     }
   }
 });

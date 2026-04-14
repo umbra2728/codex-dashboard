@@ -14,15 +14,19 @@ export function Header({
   onSearchResultSelect,
   connectionStatus,
   mode,
-  generatedAt,
-  authLabel,
-  onLogout
+  generatedAt
 }) {
   return (
     <header className="topbar">
-      <div className="topbar-intro">
-        <p className="eyebrow">Codex control plane</p>
-        <h1>Operational visibility for local agent workflows.</h1>
+      <div className="topbar-row">
+        <div className="topbar-intro">
+          <p className="eyebrow">Codex control plane</p>
+          <h1>Operational visibility for local agent workflows.</h1>
+        </div>
+        <div className="topbar-meta">
+          <span className="header-stamp">Latest snapshot</span>
+          <strong>{generatedAt ? formatDateTime(generatedAt) : 'Waiting for first sync'}</strong>
+        </div>
       </div>
 
       <div className="topbar-controls">
@@ -44,8 +48,11 @@ export function Header({
                     className="search-result"
                     onClick={() => onSearchResultSelect(result)}
                   >
-                    <strong>{result.title}</strong>
-                    <span>{result.meta}</span>
+                    <div className="search-result-main">
+                      <strong className="truncate">{result.title}</strong>
+                      <span className="truncate">{result.meta}</span>
+                    </div>
+                    <span className="search-result-page">{result.page}</span>
                   </button>
                 ))
               ) : (
@@ -78,13 +85,7 @@ export function Header({
           connectionStatus={connectionStatus}
           mode={mode}
           generatedAt={generatedAt}
-          authLabel={authLabel}
         />
-
-        <div className="header-actions">
-          <p className="header-stamp">Last snapshot {formatDateTime(generatedAt)}</p>
-          <button type="button" className="ghost-button" onClick={onLogout}>Log out</button>
-        </div>
       </div>
     </header>
   );

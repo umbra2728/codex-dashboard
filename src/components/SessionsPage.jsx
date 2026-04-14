@@ -1,4 +1,5 @@
 import { DataTable } from './DataTable.jsx';
+import { EmptyState } from './EmptyState.jsx';
 import { formatDateTime, formatRelativeTime, titleCase } from '../utils/formatting.js';
 
 function TonePill({ value }) {
@@ -11,10 +12,10 @@ function TimelineItem({ item }) {
       <div className="timeline-marker" aria-hidden="true" />
       <div className="timeline-body">
         <div className="timeline-row">
-          <strong>{item.summary || item.action || item.message}</strong>
+          <strong className="truncate-2">{item.summary || item.action || item.message}</strong>
           <TonePill value={item.status || item.severity || item.kind} />
         </div>
-        <p>{item.workspaceName} · {item.runSummary || item.sessionLabel || item.tool}</p>
+        <p className="truncate">{item.workspaceName} · {item.runSummary || item.sessionLabel || item.tool}</p>
         <span>{formatDateTime(item.timestamp || item.requestedAt)}</span>
       </div>
     </li>
@@ -27,9 +28,9 @@ export function SessionsPage({ sessions, timeline }) {
       key: 'label',
       header: 'Session',
       render: (session) => (
-        <div>
-          <strong>{session.label}</strong>
-          <p>{session.workspaceName} · {session.runSummary}</p>
+        <div className="content-stack">
+          <strong className="truncate">{session.label}</strong>
+          <p className="truncate">{session.workspaceName} · {session.runSummary}</p>
         </div>
       )
     },
@@ -38,7 +39,11 @@ export function SessionsPage({ sessions, timeline }) {
       header: 'Status',
       render: (session) => <TonePill value={session.status} />
     },
-    { key: 'model', header: 'Model' },
+    {
+      key: 'model',
+      header: 'Model',
+      cellClassName: 'cell-truncate'
+    },
     { key: 'toolCallCount', header: 'Tools' },
     { key: 'pendingApprovalCount', header: 'Approvals' },
     {
@@ -69,11 +74,15 @@ export function SessionsPage({ sessions, timeline }) {
           </div>
           <span className="panel-kicker">Newest first</span>
         </div>
-        <ul className="timeline-list">
-          {timeline.map((item, index) => (
-            <TimelineItem key={`${item.kind}-${item.id}-${index}`} item={item} />
-          ))}
-        </ul>
+        {timeline.length ? (
+          <ul className="timeline-list">
+            {timeline.map((item, index) => (
+              <TimelineItem key={`${item.kind}-${item.id}-${index}`} item={item} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState eyebrow="Timeline" title="No session events in this range." body="Widen the time filter or wait for the next snapshot." />
+        )}
       </article>
     </section>
   );

@@ -1,45 +1,7 @@
 import express from 'express';
 
-function asyncHandler(handler) {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  };
-}
-
-export function createApiRouter({ auth, authLimiter, store }) {
+export function createApiRouter({ store }) {
   const router = express.Router();
-
-  router.get('/auth/required', asyncHandler(async (_req, res) => {
-    res.json(await auth.getAuthState());
-  }));
-
-  router.post('/auth/setup', authLimiter, asyncHandler(async (req, res) => {
-    const { password, confirmPassword } = req.body || {};
-    if (confirmPassword !== undefined && password !== confirmPassword) {
-      res.status(400).json({ error: 'Password confirmation does not match.' });
-      return;
-    }
-
-    const session = await auth.setupPassword(password);
-    res.status(201).json(session);
-  }));
-
-  router.post('/auth/login', authLimiter, asyncHandler(async (req, res) => {
-    const { password } = req.body || {};
-    const session = await auth.login(password);
-    res.json(session);
-  }));
-
-  router.post('/auth/logout', asyncHandler(async (req, res) => {
-    auth.logout(auth.extractToken(req));
-    res.status(204).end();
-  }));
-
-  router.use((req, res, next) => auth.requireApiAuth(req, res, next));
 
   router.get('/health', (_req, res) => {
     res.json({ ok: true, meta: store.getMeta() });
